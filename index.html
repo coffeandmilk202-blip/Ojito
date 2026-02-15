@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Para Ámbar ✨</title>
+    <style>
+        :root { --p: #ff4d6d; --s: #ffb1c1; --gold: #f3e5ab; }
+        * { box-sizing: border-box; touch-action: none; margin: 0; padding: 0; }
+        
+        body { 
+            background: #000; 
+            color: white; font-family: 'Times New Roman', serif; overflow: hidden; height: 100vh; 
+        }
+
+        canvas { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+        #ui-layer { position: absolute; inset: 0; z-index: 10; display: flex; justify-content: center; align-items: center; pointer-events: none; }
+
+        #main-text {
+            position: absolute; width: 80%; text-align: center; font-size: clamp(1.1rem, 3.5vw, 2rem);
+            color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.4);
+            opacity: 0; transition: 4s ease-in-out; font-style: italic; line-height: 1.6;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+
+        .frame-container {
+            position: absolute; opacity: 0; transition: all 3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: clamp(280px, 35vw, 420px); pointer-events: none;
+        }
+
+        .glass-frame {
+            padding: 15px; background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px); border: 0.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        }
+
+        .glass-frame img { width: 100%; border-radius: 2px; filter: contrast(1.05) brightness(0.9); }
+        .glass-frame p { color: #ccc; margin-top: 15px; font-size: 14px; text-align: left; line-height: 1.5; border-left: 2px solid var(--p); padding-left: 10px; }
+
+        #video-container { position: absolute; width: clamp(300px, 50vw, 600px); opacity: 0; transition: 4s ease-in-out; z-index: 15; text-align: center; }
+        .video-border { border-radius: 4px; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+        video { width: 100%; display: block; opacity: 0.85; }
+
+        #letter-overlay {
+            position: fixed; inset: 0; background: #000;
+            z-index: 2000; display: none; justify-content: center; align-items: center; opacity: 0; transition: 2s;
+        }
+        #letter-paper {
+            color: #eee; padding: 40px; width: 90%; max-width: 600px;
+            line-height: 2; text-align: justify; border-top: 1px solid var(--p); border-bottom: 1px solid var(--p);
+        }
+
+        #final-shout {
+            position: fixed; inset: 0; z-index: 3000; background: transparent;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 20px; opacity: 0; transition: 3s; pointer-events: none;
+        }
+        #shout-title { font-size: clamp(1.8rem, 6vw, 4rem); color: #fff; text-shadow: 0 0 30px var(--p); margin-bottom: 20px; font-weight: normal; }
+        .shout-msg { font-size: clamp(1.2rem, 3vw, 2rem); color: var(--s); font-style: italic; min-height: 1.5em; }
+
+        #start-screen { position: fixed; inset: 0; background: #000; z-index: 5000; display: flex; justify-content: center; align-items: center; }
+        .btn-enter { background: none; border: 1px solid #444; color: #888; padding: 15px 40px; letter-spacing: 4px; cursor: pointer; transition: 1s; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen"><button class="btn-enter" onclick="iniciar()">D E S T I N O</button></div>
+    <canvas id="canvas"></canvas>
+
+    <div id="ui-layer">
+        <div id="main-text"></div>
+        <div id="f1" class="frame-container glass-frame"><img src="foto1.jpg"><p>Aquel día de la oveja me recordó que la paciencia es más bonita cuando se comparte.</p></div>
+        <div id="f2" class="frame-container glass-frame"><img src="foto2.jpg"><p>Momentos significativos compartiendo una misma calma.</p></div>
+        <div id="f3" class="frame-container glass-frame"><img src="foto3.jpg"><p>Hay una complicidad silenciosa en estar ahí el uno para el otro.</p></div>
+        <div id="f4" class="frame-container glass-frame"><img src="foto4.jpg"><p>Construir algo de la nada es valioso, conservarlo es lo que importa.</p></div>
+        <div id="f5" class="frame-container glass-frame"><img src="foto5.jpg"><p>Historias que solo nosotros conocemos bien.</p></div>
+
+        <div id="video-container">
+            <div class="video-border"><video id="v-clip" playsinline><source src="clip_hok.mp4" type="video/mp4"></video></div>
+            <p id="video-caption" style="margin-top:20px; color: var(--gold); letter-spacing: 2px; opacity: 0; transition: 2s;"></p>
+        </div>
+    </div>
+
+    <div id="letter-overlay">
+        <div id="letter-paper">
+            <h2 style="font-weight: normal; margin-bottom: 30px; letter-spacing: 5px; text-align: center;">ÁMBAR</h2>
+            <div id="typewriter"></div>
+            <p style="text-align: right; margin-top: 50px; color: var(--p); letter-spacing: 2px;">OneRyu</p>
+        </div>
+    </div>
+
+    <div id="final-shout">
+        <h1 id="shout-title"></h1>
+        <p id="shout-msg1" class="shout-msg"></p>
+        <p id="shout-msg2" class="shout-msg" style="margin-top: 20px; color: white;"></p>
+    </div>
+
+    <audio id="musica" loop><source src="tu_musica.mp3" type="audio/mpeg"></audio>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const audio = document.getElementById('musica');
+        let particles = [];
+        let autoFire;
+
+        const pensamientos = [
+            "Hay conexiones que no necesitan ser explicadas para ser profundas.",
+            "Gracias por esa presencia constante que hace todo más sencillo.",
+            "Valoro la calma que compartimos.",
+            "Ámbar, gracias por permitirme ser parte de tu mundo."
+        ];
+
+        const cartaFinal = `He aprendido que las mejores historias se construyen en silencio, con pequeños gestos y momentos de calma compartida. \n\nDisfruto de la naturalidad con la que nos entendemos, ya sea entre la estrategia de un juego o la tranquilidad de construir algo juntos. Gracias por ser esa persona auténtica con la que el tiempo parece transcurrir distinto. \n\nEspero que este detalle te recuerde el valor que tienes en mi vida.`;
+
+        function iniciar() {
+            document.getElementById('start-screen').style.display = 'none';
+            audio.play();
+            resize();
+            window.addEventListener('resize', resize);
+            render();
+            autoFire = setInterval(() => createFirework(Math.random()*canvas.width, Math.random()*canvas.height*0.5, 0.25), 3000);
+            cicloCinematico();
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor(x, y, color, velocity, life = 0.002) {
+                this.x = x; this.y = y;
+                this.color = color;
+                this.velocity = velocity;
+                this.alpha = 1;
+                this.friction = 0.98;
+                this.gravity = 0.03;
+                this.life = life;
+            }
+            update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
+                this.velocity.y += this.gravity;
+                this.x += this.velocity.x; this.y += this.velocity.y;
+                this.alpha -= this.life;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10; ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function createFirework(x, y, size = 0.3, isEpic = false) {
+            const hue = isEpic ? Math.floor(Math.random() * 360) : 345;
+            const color = `hsla(${hue}, 90%, 75%, 0.9)`;
+            const count = isEpic ? 120 : 40;
+            const life = isEpic ? 0.005 : 0.002;
+            for (let i = 0; i < count; i++) {
+                const t = (Math.PI * 2 / count) * i;
+                const vx = 16 * Math.pow(Math.sin(t), 3) * size;
+                const vy = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * size;
+                particles.push(new Particle(x, y, color, {x: vx, y: vy}, life));
+            }
+        }
+
+        function render() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, i) => {
+                p.update(); p.draw();
+                if (p.alpha <= 0) particles.splice(i, 1);
+            });
+            requestAnimationFrame(render);
+        }
+
+        async function cicloCinematico() {
+            const ph = document.getElementById('main-text');
+            for (let i = 1; i <= 5; i++) {
+                if (i <= pensamientos.length) {
+                    ph.innerText = pensamientos[i-1]; ph.style.opacity = '1';
+                    await new Promise(r => setTimeout(r, 7000)); ph.style.opacity = '0';
+                    await new Promise(r => setTimeout(r, 1500));
+                }
+                const f = document.getElementById('f'+i);
+                f.style.left = '50%'; f.style.top = '50%'; f.style.transform = 'translate(-50%, -50%)';
+                f.style.opacity = '1';
+                await new Promise(r => setTimeout(r, 9000)); f.style.opacity = '0';
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            const vc = document.getElementById('video-container');
+            const vCap = document.getElementById('video-caption');
+            vc.style.opacity = '1';
+            vCap.innerText = "Ni cuatro ganks pudieron con nosotros...";
+            vCap.style.opacity = '1';
+            const vid = document.getElementById('v-clip');
+            vid.play();
+            vid.onended = () => {
+                vc.style.opacity = '0';
+                setTimeout(showLetter, 2000);
+            };
+        }
+
+        function typeWriter(id, text, speed, callback) {
+            let i = 0;
+            const el = document.getElementById(id);
+            function step() {
+                if (i < text.length) {
+                    el.textContent += text.charAt(i++);
+                    setTimeout(step, speed);
+                } else if (callback) callback();
+            }
+            step();
+        }
+
+        function showLetter() {
+            const ov = document.getElementById('letter-overlay');
+            ov.style.display = 'flex';
+            setTimeout(() => ov.style.opacity = '1', 100);
+            typeWriter('typewriter', cartaFinal, 75, () => setTimeout(showFinalShout, 4000));
+        }
+
+        function showFinalShout() {
+            const overlay = document.getElementById('letter-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                const shout = document.getElementById('final-shout');
+                shout.style.display = 'flex';
+                setTimeout(() => shout.style.opacity = '1', 100);
+                
+                typeWriter('shout-title', 'Feliz San Valentín Ámbar', 100, () => {
+                    typeWriter('shout-msg1', 'Espero que hayas tenido un hermoso día.', 80, () => {
+                        typeWriter('shout-msg2', 'Te quiero mucho.', 120, () => {
+                            activarFuegosFinales();
+                        });
+                    });
+                });
+            }, 2500);
+        }
+
+        function activarFuegosFinales() {
+            clearInterval(autoFire);
+            // Explosiones por toda la pantalla (arriba, centro, lados)
+            setInterval(() => {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                createFirework(x, y, 0.4 + Math.random() * 0.4, true);
+            }, 300); 
+
+            confetti({
+                particleCount: 800,
+                spread: 200,
+                origin: { y: 0.6 },
+                colors: ['#ff4d6d', '#ffffff', '#ffd700', '#00ffcc', '#ffcc00', '#ff00ff']
+            });
+        }
+    </script>
+</body>
+</html>
